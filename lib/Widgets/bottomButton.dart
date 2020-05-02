@@ -10,7 +10,7 @@ class BottomButton extends StatelessWidget {
       children: <Widget>[
         MaterialButton(
             color: imgOrVideo.value == 0 ? selectedcolor : unselectedcolor,
-            splashColor: Theme.of(context).accentColor,
+            splashColor: Colors.amberAccent,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
             onPressed: () {
@@ -22,16 +22,15 @@ class BottomButton extends StatelessWidget {
               padding:
                   const EdgeInsets.symmetric(horizontal: 25.0, vertical: 3),
               child: Text("Image",
-                  style: Theme.of(context)
-                      .textTheme
-                      .body2
-                      .copyWith(color: Colors.white)),
+                  style: Theme.of(context).textTheme.body2.copyWith(
+                      color:
+                          imgOrVideo.value == 0 ? Colors.white : Colors.black)),
             )),
         SizedBox(
           width: 15,
         ),
         MaterialButton(
-            splashColor: Theme.of(context).accentColor,
+            splashColor: Colors.amberAccent,
             color: imgOrVideo.value == 1 ? selectedcolor : unselectedcolor,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -44,7 +43,8 @@ class BottomButton extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 3),
               child: Text("Video",
                   style: Theme.of(context).textTheme.body2.copyWith(
-                        color: Colors.white,
+                        color:
+                            imgOrVideo.value == 1 ? Colors.white : Colors.black,
                       )),
             )),
       ],

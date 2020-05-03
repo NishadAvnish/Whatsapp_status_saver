@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:share/share.dart';
 import 'package:status_downloader/Utils/config.dart';
 import 'package:status_downloader/Widgets/modified_video_player.dart';
 
@@ -20,6 +22,11 @@ class _DisplayState extends State<Display> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.index);
+  }
+
+  String _convrtToBase64(String img) {
+    final bytes = File(img).readAsBytesSync();
+    return base64Encode(bytes);
   }
 
   @override
@@ -64,7 +71,10 @@ class _DisplayState extends State<Display> {
                       style: Theme.of(context).textTheme.body1,
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    String _base64Img=_convrtToBase64(widget.list[index]);
+                    Share.share(_base64Img,subject:"Look what i find in my Status Downloader");
+                  },
                 ),
               )
             ]);

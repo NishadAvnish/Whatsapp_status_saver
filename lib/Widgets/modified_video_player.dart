@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
@@ -30,26 +29,21 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setVolume(1);
     _controller.setLooping(true);
-    //_controller.addListener(_changeValue);
-    _controller.play();
-    if(this.mounted)
-    {_controller.addListener(
-      () => setState(
+
+    _controller.addListener(() {
+      setState(
         () {
           _value = _controller.value.position.inSeconds.toDouble();
         },
-      ),);}
-    
+      );
+    });
+
+    _controller.play();
   }
 
   @override
   void dispose() {
     super.dispose();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp,
-    ]);
-    // _orientation();
     _controller.dispose();
   }
 
@@ -64,10 +58,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return  Container(
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: _getMediaPlayer()
-          );
+    return Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        child: _getMediaPlayer());
   }
 
   Widget _getMediaPlayer() {
@@ -89,48 +82,48 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       return const Text('Please Select or Record a Video.');
     } else if (controller.value.initialized) {
       return Stack(
-          children: <Widget>[
-            Positioned.fill(
-              child: InkWell(
-                child: AspectRatio(
-                  aspectRatio: controller.value.aspectRatio,
-                  child: VideoPlayer(
-                    controller,
-                  ),
+        children: <Widget>[
+          Positioned.fill(
+            child: InkWell(
+              child: AspectRatio(
+                aspectRatio: controller.value.aspectRatio,
+                child: VideoPlayer(
+                  controller,
                 ),
-                onTap: () {
-                  setState(() {
-                    _isStackOpen = !_isStackOpen;
-                  });
-                },
               ),
+              onTap: () {
+                setState(() {
+                  _isStackOpen = !_isStackOpen;
+                });
+              },
             ),
-            _isStackOpen
-                ? Container()
-                : GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isStackOpen = !_isStackOpen;
-                      });
-                    },
-                    child: Container(
-                      height: controller.value.size.height,
-                      color: Colors.transparent,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                  top: MediaQuery.of(context).padding.top),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Container(
+          ),
+          _isStackOpen
+              ? Container()
+              : GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isStackOpen = !_isStackOpen;
+                    });
+                  },
+                  child: Container(
+                    height: controller.value.size.height,
+                    color: Colors.transparent,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                                top: MediaQuery.of(context).padding.top),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Container(
                                     decoration: BoxDecoration(
                                         color: Colors.black54,
                                         shape: BoxShape.circle),
-                                    child:IconButton(
+                                    child: IconButton(
                                       icon: Icon(
                                         _controller.value.isPlaying
                                             ? Icons.pause
@@ -146,44 +139,41 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                           }
                                         });
                                       },
-                                    )
-                                  ),
-                                ],
-                              ),
+                                    )),
+                              ],
                             ),
                           ),
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: Slider(
-                                  onChanged: (double changedValue) {
-                                    setState(() {
-                                      _value = changedValue;
-                                      _controller.seekTo(Duration(
-                                          seconds: changedValue.floor()));
-                                    });
-                                  },
-                                  onChangeStart: (changedValue) {
-                                    setState(() {
-                                      _value = changedValue;
-                                    });
-                                  },
-                                  value: _value,
-                                  min: 0.0,
-                                  max: controller.value.duration.inSeconds
-                                      .toDouble(),
-                                  label: _value.toString(),
-                                ),
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Slider(
+                                onChanged: (double changedValue) {
+                                  setState(() {
+                                    _value = changedValue;
+                                    _controller.seekTo(Duration(
+                                        seconds: changedValue.floor()));
+                                  });
+                                },
+                                onChangeStart: (changedValue) {
+                                  setState(() {
+                                    _value = changedValue;
+                                  });
+                                },
+                                value: _value,
+                                min: 0.0,
+                                max: controller.value.duration.inSeconds
+                                    .toDouble(),
+                                label: _value.toString(),
                               ),
-                              
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  )
-          ],
-        
+                  ),
+                )
+        ],
       );
     } else {
       isPlaying = false;

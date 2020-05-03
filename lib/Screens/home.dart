@@ -40,43 +40,41 @@ class _HomeState extends State<Home> {
         await [Permission.storage].request();
     if (statuses[Permission.storage] == PermissionStatus.granted) {
       _checkDir();
-    }
-    else if (statuses[Permission.storage] ==
+    } else if (statuses[Permission.storage] ==
         PermissionStatus.permanentlyDenied) {
       openAppSettings();
-    } 
-    
-    else {
+    } else {
       SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     }
   }
 
   void _checkDir() {
     if (!Directory(_dir.path).existsSync()) {
-       showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return AlertDialog(
-              title: Text("Install Whatsapp",style: Theme.of(context).textTheme.subhead),
-              content: Text("You need to install Whatsapp to get access to your friend's status",
-                  style: Theme.of(context).textTheme.body1),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text("Ok", style: Theme.of(context).textTheme.body1),
-                  onPressed: () => SystemChannels.platform
-                      .invokeMethod('SystemNavigator.pop'),
-                ),
-                FlatButton(
-                    onPressed: () => OpenAppstore.launch(
-                        androidAppId: "com.whatsapp&hl=en",
-                        iOSAppId: "310633997"),
-                    child: Text("Download Whatsapp",
-                        style: Theme.of(context).textTheme.body1)),
-              ],
-            );
-          },
-        
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Install Whatsapp",
+                style: Theme.of(context).textTheme.subhead),
+            content: Text(
+                "You need to install Whatsapp to get access to your friend's status",
+                style: Theme.of(context).textTheme.body1),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Ok", style: Theme.of(context).textTheme.body1),
+                onPressed: () =>
+                    SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+              ),
+              FlatButton(
+                  onPressed: () => OpenAppstore.launch(
+                      androidAppId: "com.whatsapp&hl=en",
+                      iOSAppId: "310633997"),
+                  child: Text("Download Whatsapp",
+                      style: Theme.of(context).textTheme.body1)),
+            ],
+          );
+        },
       );
     }
   }
@@ -84,13 +82,15 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("whatsapp Status")),
+      appBar: AppBar(title: Text("WhatsApp Status")),
       body: ValueListenableBuilder(
         valueListenable: imgOrVideo,
         builder: (BuildContext context, value, Widget child) {
           return Stack(alignment: Alignment.center, children: [
             Positioned.fill(
-                child:value==0? StatusImage(dir:_dir):StatusVideo(dir:_dir)),
+                child: value == 0
+                    ? StatusImage(dir: _dir)
+                    : StatusVideo(dir: _dir)),
             Positioned(
               bottom: 15,
               child: BottomButton(),

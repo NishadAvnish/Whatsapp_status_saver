@@ -1,10 +1,51 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:thumbnails/thumbnails.dart';
 
-class Grid extends StatelessWidget {
+class Grid extends StatefulWidget {
   final String flag;
   final List<String> list;
   const Grid({this.list, this.flag});
+
+  @override
+  _GridState createState() => _GridState();
+}
+
+class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
+  var _thumbPath;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    //if (widget.flag == "video") _deletePresentThumbnail();
+  }
+
+  // Future<void> _deletePresentThumbnail() async {
+  //   final _appDir = await getApplicationSupportDirectory();
+  //   _thumbPath = join(_appDir.path, "thumbnail");
+
+  //   //if _thumbPath is already present then this if condition doesnot create the directory
+  //   if (!Directory(_thumbPath).existsSync()) {
+  //     File(_thumbPath).createSync();
+  //   }
+
+  //   // to delete all the files lready present in thumbPath
+  //   Directory(_thumbPath).deleteSync(recursive: true);
+  // }
+
+  _getImage(videoPathUrl) async {
+    String thumb = await Thumbnails.getThumbnail(
+        thumbnailFolder: _thumbPath,
+        videoFile: videoPathUrl,
+        imageType:
+            ThumbFormat.PNG, //this image will store in created folderpath
+        quality: 10);
+    return thumb;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,24 +55,55 @@ class Grid extends StatelessWidget {
       width: _size.width,
       margin: EdgeInsets.all(2),
       child: GridView.builder(
-          itemCount: list.length,
+          itemCount: widget.list.length,
           gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             childAspectRatio: 2 / 2.4,
             maxCrossAxisExtent: 196,
           ),
           itemBuilder: (_, index) {
             return InkWell(
-                onTap: () {
-                  return Navigator.of(context).pushNamed("/display",
-                      arguments: {"list": list, "index": index,"flag":flag});
-                },
-                child: Card(
-                  child: Image.file(
-                    File(list[index]),
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.low,
-                  ),
-                ));
+              onTap: () {
+                return Navigator.of(context).pushNamed("/display", arguments: {
+                  "list": widget.list,
+                  "index": index,
+                  "flag": widget.flag
+                });
+              },
+              child: Card(
+                child: widget.flag == "image"
+                    ? Image.file(
+                        File(widget.list[index]),
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.low,
+                      )
+                    : FutureBuilder(
+                        future: _getImage(widget.list[index]),
+                        builder: (context, snapshot) {
+                          switch (snapshot.connectionState) {
+                            case ConnectionState.none:
+                              break;
+                            case ConnectionState.waiting:
+                              // return Center(child: CircularProgressIndicator());
+                              return Image.asset("Assets/image/launchicon.png");
+                              break;
+                            case ConnectionState.active:
+                              break;
+                            case ConnectionState.done:
+                              if (snapshot.hasError) {
+                                return Center(
+                                    child: Text(snapshot.error.toString()));
+                              } else {
+                                return Image.file(
+                                  File(snapshot.data),
+                                  fit: BoxFit.cover,
+                                );
+                              }
+
+                              break;
+                          }
+                        }),
+              ),
+            );
           }),
     );
   }

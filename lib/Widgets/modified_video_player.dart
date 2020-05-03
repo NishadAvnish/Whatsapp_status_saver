@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-
 class VideoPlayerScreen extends StatefulWidget {
   final List<String> videoList;
   final int index;
-  VideoPlayerScreen({Key key, this.videoList,this.index}) : super(key: key);
+  VideoPlayerScreen({Key key, this.videoList, this.index}) : super(key: key);
 
   @override
   _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
@@ -20,7 +18,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   VoidCallback listener;
   Future<void> _initializeVideoPlayerFuture;
   bool isPlaying = false;
-  bool _isPortrait = true;
   bool _isStackOpen = true;
   double _value = 0.0;
 
@@ -28,16 +25,21 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void initState() {
     super.initState();
 
-    _controller = VideoPlayerController.file(File(widget.videoList[widget.index]));
+    _controller =
+        VideoPlayerController.file(File(widget.videoList[widget.index]));
     _initializeVideoPlayerFuture = _controller.initialize();
-    
     _controller.setVolume(1);
-    _controller.setLooping(false);
+    _controller.setLooping(true);
     //_controller.addListener(_changeValue);
-
-    _controller.addListener(() => setState(() {
+    _controller.play();
+    if(this.mounted)
+    {_controller.addListener(
+      () => setState(
+        () {
           _value = _controller.value.position.inSeconds.toDouble();
-        }));
+        },
+      ),);}
+    
   }
 
   @override
@@ -60,6 +62,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     super.deactivate();
   }
 
+  @override
+  Widget build(BuildContext context) {
+    return  Container(
+                height: MediaQuery.of(context).size.height * 0.5,
+                child: _getMediaPlayer()
+          );
+  }
+
   Widget _getMediaPlayer() {
     return FutureBuilder(
       future: _initializeVideoPlayerFuture,
@@ -73,53 +83,27 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: _isPortrait
-          ? Dialog(
-              child: Container(
-                 // height: MediaQuery.of(context).size.height * 0.4,
-                  child: _getMediaPlayer()),
-            )
-          : _getMediaPlayer(),
-    );
-  }
-
   Widget _previewVideo(VideoPlayerController controller) {
-    final height = _isPortrait
-        ? MediaQuery.of(context).size.height * 0.4
-        : MediaQuery.of(context).size.height;
     if (controller == null) {
       isPlaying = false;
       return const Text('Please Select or Record a Video.');
     } else if (controller.value.initialized) {
-      return Container(
-        height: height,
-        child: Stack(
+      return Stack(
           children: <Widget>[
             Positioned.fill(
               child: InkWell(
-                  child: AspectRatio(
-                    aspectRatio: controller.value.aspectRatio,
-                    child: VideoPlayer(
-                      controller,
-                    ),
+                child: AspectRatio(
+                  aspectRatio: controller.value.aspectRatio,
+                  child: VideoPlayer(
+                    controller,
                   ),
-                  onTap: () {
-                    setState(() {
-                      _isStackOpen = !_isStackOpen;
-                    });
-                  },
-                  onDoubleTap: () {
-                    if (isPlaying) {
-                      _controller.pause();
-                      isPlaying = false;
-                    } else {
-                      _controller.play();
-                      isPlaying = true;
-                    }
-                  }),
+                ),
+                onTap: () {
+                  setState(() {
+                    _isStackOpen = !_isStackOpen;
+                  });
+                },
+              ),
             ),
             _isStackOpen
                 ? Container()
@@ -146,7 +130,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                     decoration: BoxDecoration(
                                         color: Colors.black54,
                                         shape: BoxShape.circle),
-                                    child: IconButton(
+                                    child:IconButton(
                                       icon: Icon(
                                         _controller.value.isPlaying
                                             ? Icons.pause
@@ -162,7 +146,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                           }
                                         });
                                       },
-                                    ),
+                                    )
                                   ),
                                 ],
                               ),
@@ -191,24 +175,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   label: _value.toString(),
                                 ),
                               ),
-                              InkWell(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      left: 0,
-                                      right: 10.0 +
-                                          MediaQuery.of(context)
-                                              .padding
-                                              .bottom),
-                                  child: Icon(
-                                    _isPortrait
-                                        ? Icons.fullscreen
-                                        : Icons.fullscreen_exit,
-                                    size: 33,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                onTap: () => _orientation(),
-                              ),
+                              
                             ],
                           ),
                         ],
@@ -216,30 +183,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     ),
                   )
           ],
-        ),
+        
       );
     } else {
       isPlaying = false;
       return const Text('Error Loading Video');
-    }
-  }
-
-  void _orientation() {
-    if (_isPortrait) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-      ]);
-
-      setState(() {
-        _isPortrait = false;
-      });
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
-      setState(() {
-        _isPortrait = true;
-      });
     }
   }
 }

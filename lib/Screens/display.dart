@@ -1,8 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
-
+import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
-import 'package:share/share.dart';
+import 'package:flutter/services.dart';
 import 'package:status_downloader/Utils/config.dart';
 import 'package:status_downloader/Widgets/modified_video_player.dart';
 
@@ -24,9 +23,22 @@ class _DisplayState extends State<Display> {
     _pageController = PageController(initialPage: widget.index);
   }
 
-  String _convrtToBase64(String img) {
-    final bytes = File(img).readAsBytesSync();
-    return base64Encode(bytes);
+  Future<void> _shareContent(index) async {
+    try {
+      final ByteData bytes = await rootBundle.load(widget.list[index]);
+      // this will return the file name
+      final _list = widget.list[index].split("/");
+      final _fileName = _list[_list.length - 1];
+      await Share.file(
+          "Sending a file  using Flutter application",
+          _fileName,
+          bytes.buffer.asUint8List(),
+          "${widget.flag == "image" ? "image/*" : "video/*"}",
+          text:
+              "Sending using my whatsapp status downloader.Go download it....");
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -51,9 +63,12 @@ class _DisplayState extends State<Display> {
           itemBuilder: (context, index) {
             return Stack(alignment: Alignment.center, children: [
               widget.flag == "image"
-                  ? Image.file(
-                      File(widget.list[index]),
-                      fit: BoxFit.contain,
+                  ? Hero(
+                      tag: "image+${widget.index.toString()}",
+                      child: Image.file(
+                        File(widget.list[index]),
+                        fit: BoxFit.contain,
+                      ),
                     )
                   : VideoPlayerScreen(videoList: widget.list, index: index),
               Positioned(
@@ -71,9 +86,8 @@ class _DisplayState extends State<Display> {
                       style: Theme.of(context).textTheme.body1,
                     ),
                   ),
-                  onPressed: () {
-                    String _base64Img=_convrtToBase64(widget.list[index]);
-                    Share.share(_base64Img,subject:"Look what i find in my Status Downloader");
+                  onPressed: () async {
+                    _shareContent(index);
                   },
                 ),
               )

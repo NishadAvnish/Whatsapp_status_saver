@@ -67,6 +67,7 @@ class _HomeState extends State<Home> {
                     SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
               ),
               FlatButton(
+                  // if whatsapp is not yet downloaded it will open play store to download whatsapp.
                   onPressed: () => OpenAppstore.launch(
                       androidAppId: "com.whatsapp&hl=en",
                       iOSAppId: "310633997"),

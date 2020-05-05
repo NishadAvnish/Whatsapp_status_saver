@@ -31,11 +31,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _controller.setLooping(true);
 
     _controller.addListener(() {
-      setState(
-        () {
-          _value = _controller.value.position.inSeconds.toDouble();
-        },
-      );
+      if (!mounted)
+        setState(
+          () {
+            //_value to change the slider position based on video position.
+            _value = _controller.value.position.inSeconds.toDouble();
+          },
+        );
     });
 
     _controller.play();

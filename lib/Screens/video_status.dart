@@ -16,12 +16,17 @@ class _StatusVideoState extends State<StatusVideo> {
   @override
   void initState() {
     super.initState();
-    _videoList = [];
-    _videoList = widget.dir
-        .listSync()
+    
+    syncVideos();
+  }
+
+  void syncVideos() async {
+    _videoList = await widget.dir
+        .list()
         .map((item) => item.path)
         .where((item) => item.endsWith(".mp4"))
-        .toList(growable: false);
+        .toList();
+    setState(() {});
   }
 
   @override

@@ -29,7 +29,7 @@ dependencies:
   video_player: ^0.10.9+1
   thumbnails: ^1.0.1
   path:
-  share: ^0.6.4
+  esys_flutter_share: ^1.0.2
 
 dev_dependencies:
   flutter_test:

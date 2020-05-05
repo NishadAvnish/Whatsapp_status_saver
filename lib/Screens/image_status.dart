@@ -11,8 +11,10 @@ class StatusImage extends StatefulWidget {
   _StatusImageState createState() => _StatusImageState();
 }
 
-class _StatusImageState extends State<StatusImage> {
+class _StatusImageState extends State<StatusImage>  {
   List<String> _imageList = [];
+
+
   @override
   void initState() {
     super.initState();
@@ -33,4 +35,6 @@ class _StatusImageState extends State<StatusImage> {
       ),
     );
   }
+
+  
 }

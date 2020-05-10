@@ -14,11 +14,11 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Directory _dir;
+  Directory _dir = Directory('/storage/emulated/0/WhatsApp/Media/.Statuses');
+  bool _isPathValid = true;
   @override
   void initState() {
     super.initState();
-    _dir = Directory('/storage/emulated/0/WhatsApp/Media/.Statuses');
     _checkPermissionStatus();
   }
 
@@ -50,6 +50,7 @@ class _HomeState extends State<Home> {
 
   void _checkDir() {
     if (!Directory(_dir.path).existsSync()) {
+      _isPathValid = false;
       showDialog(
         context: context,
         barrierDismissible: false,

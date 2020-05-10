@@ -31,7 +31,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _controller.setLooping(true);
 
     _controller.addListener(() {
-      if (!mounted)
+      if (mounted)
         setState(
           () {
             //_value to change the slider position based on video position.

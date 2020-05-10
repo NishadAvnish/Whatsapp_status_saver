@@ -19,18 +19,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   bool isPlaying = false;
   bool _isStackOpen = true;
   double _value = 0.0;
+  
 
   @override
   void initState() {
     super.initState();
-
-    _controller =
-        VideoPlayerController.file(File(widget.videoList[widget.index]));
-    _initializeVideoPlayerFuture = _controller.initialize();
-    _controller.setVolume(1);
-    _controller.setLooping(true);
-
-    _controller.addListener(() {
+    listener=() {
       if (mounted)
         setState(
           () {
@@ -38,25 +32,25 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             _value = _controller.value.position.inSeconds.toDouble();
           },
         );
-    });
+    };
+    _controller =
+        VideoPlayerController.file(File(widget.videoList[widget.index]));
+    _initializeVideoPlayerFuture = _controller.initialize();
+    _controller.setVolume(1);
+    _controller.setLooping(true);
+
+    _controller.addListener(listener);
 
     _controller.play();
   }
 
   @override
   void dispose() {
+    _controller.removeListener(listener);
+    _controller?.dispose();
     super.dispose();
-    _controller.dispose();
   }
 
-  @override
-  void deactivate() {
-    if (_controller != null) {
-      _controller.setVolume(0.0);
-      _controller.removeListener(listener);
-    }
-    super.deactivate();
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -11,11 +11,10 @@ class Grid extends StatefulWidget {
   _GridState createState() => _GridState();
 }
 
-class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
+class _GridState extends State<Grid> {
   var _thumbPath;
 
-  @override
-  bool get wantKeepAlive => true;
+
 
   @override
   void initState() {
@@ -72,14 +71,12 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
               },
               child: Card(
                 child: widget.flag == "image"
-                    ? Hero(
-                        tag: "image+${index.toString()}",
-                        child: Image.file(
+                    ?  Image.file(
                           File(widget.list[index]),
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.low,
-                        ),
-                      )
+                        )
+                    
                     : FutureBuilder(
                         future: _getImage(widget.list[index]),
                         builder: (context, snapshot) {

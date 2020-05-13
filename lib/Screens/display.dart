@@ -19,8 +19,8 @@ class Display extends StatefulWidget {
 
 class _DisplayState extends State<Display> {
   PageController _pageController;
-  bool _isStackOpen = false;
-  int _modifiedIndex; //this index for saving different image on different imageview
+  bool _isStackOpen = true;
+  int _modifiedIndex;
 
   @override
   void initState() {
@@ -103,10 +103,12 @@ class _DisplayState extends State<Display> {
             itemBuilder: (context, index) {
               return Stack(alignment: Alignment.center, children: [
                 widget.flag == "image"
-                    ?  Image.file(
+                    ? Hero(
+                        tag: "image+${widget.index.toString()}",
+                        child: Image.file(
                           File(widget.list[index]),
                           fit: BoxFit.contain,
-                       
+                        ),
                       )
                     : VideoPlayerScreen(videoList: widget.list, index: index),
                 _isStackOpen

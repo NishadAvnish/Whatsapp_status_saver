@@ -14,65 +14,24 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  Directory _dir;
-  bool _isGranted = false;
+  Directory _dir = Directory('/storage/emulated/0/WhatsApp/Media/.Statuses');
   bool _isPathValid = true;
   @override
   void initState() {
     super.initState();
-    _dir = Directory('/storage/emulated/0/WhatsApp/Media/.Statuses');
     _checkPermissionStatus();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-  }
-
-  _showDialog(title, content, actionButton, [launch]) {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) {
-          return AlertDialog(
-            title: Text(title, style: Theme.of(context).textTheme.subhead),
-            content: Text(content, style: Theme.of(context).textTheme.body1),
-            actions: <Widget>[
-              FlatButton(
-                child: Text(actionButton[0],
-                    style: Theme.of(context).textTheme.body1),
-                onPressed: () =>
-                    SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
-              ),
-              launch != null
-                  ? FlatButton(
-                      onPressed: () => OpenAppstore.launch(
-                          androidAppId: "com.whatsapp&hl=en",
-                          iOSAppId: "310633997"),
-                      child: Text(actionButton[1],
-                          style: Theme.of(context).textTheme.body1))
-                  : Container(),
-            ],
-          );
-        });
   }
 
   Future<void> _checkPermissionStatus() async {
     final status = await Permission.storage.status;
-    print(status);
-    if (status.isGranted) {
-      //do nothing in this case
-      setState(() {
-        _isGranted = true;
-      });
-      _checkDir();
-    } else if (status.isPermanentlyDenied) {
-      _showDialog(
-          "Open Phone Setting",
-          "open phone setting to use the app by granting the required permission",
-          ["Ok"]);
-    } else {
+
+    if (status.isUndetermined || status.isDenied) {
       _askForPermission();
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+    } else if (status.isGranted) {
+      //do nothing in this case
+      _checkDir();
     }
   }
 
@@ -80,10 +39,10 @@ class _HomeState extends State<Home> {
     Map<Permission, PermissionStatus> statuses =
         await [Permission.storage].request();
     if (statuses[Permission.storage] == PermissionStatus.granted) {
-      setState(() {
-        _isGranted = true;
-      });
       _checkDir();
+    } else if (statuses[Permission.storage] ==
+        PermissionStatus.permanentlyDenied) {
+      openAppSettings();
     } else {
       SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     }
@@ -91,14 +50,34 @@ class _HomeState extends State<Home> {
 
   void _checkDir() {
     if (!Directory(_dir.path).existsSync()) {
-      setState(() {
-        _isPathValid = false;
-      });
-      _showDialog(
-          "Install Whatsapp",
-          "You need to install Whatsapp to get access to your friend's status",
-          ["Ok", "Download"],
-          "having4thpar");
+      _isPathValid = false;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Install Whatsapp",
+                style: Theme.of(context).textTheme.subhead),
+            content: Text(
+                "You need to install Whatsapp to get access to your friend's status",
+                style: Theme.of(context).textTheme.body1),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Ok", style: Theme.of(context).textTheme.body1),
+                onPressed: () =>
+                    SystemChannels.platform.invokeMethod('SystemNavigator.pop'),
+              ),
+              FlatButton(
+                  // if whatsapp is not yet downloaded it will open play store to download whatsapp.
+                  onPressed: () => OpenAppstore.launch(
+                      androidAppId: "com.whatsapp&hl=en",
+                      iOSAppId: "310633997"),
+                  child: Text("Download Whatsapp",
+                      style: Theme.of(context).textTheme.body1)),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -111,12 +90,9 @@ class _HomeState extends State<Home> {
         builder: (BuildContext context, value, Widget child) {
           return Stack(alignment: Alignment.center, children: [
             Positioned.fill(
-              child: _isGranted && _isPathValid
-                  ? value == 0 ? StatusImage(dir: _dir) : StatusVideo(dir: _dir)
-                  : Container(
-                      color: Colors.white,
-                    ),
-            ),
+                child: value == 0
+                    ? StatusImage(dir: _dir)
+                    : StatusVideo(dir: _dir)),
             Positioned(
               bottom: 15,
               child: BottomButton(),

@@ -17,6 +17,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
                 index: index,
                 flag: flag,
               ));
-    
+    default:
   }
 }

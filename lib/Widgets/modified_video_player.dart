@@ -49,14 +49,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _controller.dispose();
   }
 
-  @override
-  void deactivate() {
-    if (_controller != null) {
-      _controller.setVolume(0.0);
-      _controller.removeListener(listener);
-    }
-    super.deactivate();
-  }
+ 
 
   @override
   Widget build(BuildContext context) {

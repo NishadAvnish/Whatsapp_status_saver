@@ -72,10 +72,10 @@ class _StatusVideoState extends State<StatusVideo> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      child: Grid(
+      child: _videoList.length!=0?Grid(
         list: _videoList,
         flag: "video",
-      ),
+      ): Center(child: CircularProgressIndicator()),
     );
   }
 }

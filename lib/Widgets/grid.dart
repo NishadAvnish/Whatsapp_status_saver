@@ -87,7 +87,7 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
                             case ConnectionState.none:
                               break;
                             case ConnectionState.waiting:
-                              return Center(child: CircularProgressIndicator());
+                              return Image.asset("Assets/image/loading.gif");
                               break;
                             case ConnectionState.active:
                               break;

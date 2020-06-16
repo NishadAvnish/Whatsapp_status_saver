@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +31,12 @@ class _HomeState extends State<Home> {
     super.didChangeDependencies();
   }
 
-  _showDialog(title, content, actionButton, [launch]) {
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _showDialog(title, content, actionButton, [launch]) {
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -109,6 +115,32 @@ class _HomeState extends State<Home> {
     }
   }
 
+  Future<bool> _onBackPressed() async {
+    
+
+    return showDialog(
+      context: context,
+      builder: (context) => new AlertDialog(
+        title: new Text('Are you sure?'),
+        content: new Text('Do you want to exit from App'),
+        actions: <Widget>[
+          new GestureDetector(
+            onTap: () => Navigator.of(context).pop(false),
+            child: Text("NO"),
+          ),
+          SizedBox(height: 30),
+          new GestureDetector(
+            onTap: () => Navigator.of(context).pop(true),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: Text("YES"),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isdownloadedClicked) {
@@ -117,66 +149,69 @@ class _HomeState extends State<Home> {
       _dir = Directory('/storage/emulated/0/WhatsApp/Media/.Statuses');
       _checkDir();
     }
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("Status Downloader"),
-          actions: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(right: 12.0),
-              child: Container(
-                height: 30,
-                width: 30,
-                decoration: BoxDecoration(
-                    border: Border.all(
-                        width: 2,
-                        color:
-                            _isdownloadedClicked ? Colors.red : Colors.white),
-                    shape: BoxShape.circle),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isdownloadedClicked = !_isdownloadedClicked;
-                    });
-                    isDownlaoded.value = _isdownloadedClicked;
-                  },
-                  child: Icon(
-                    Icons.arrow_downward,
-                    color: _isdownloadedClicked ? Colors.red : Colors.white,
+    return WillPopScope(
+      onWillPop: _onBackPressed,
+      child: Scaffold(
+          appBar: AppBar(
+            title: Text("Status Downloader"),
+            actions: <Widget>[
+              Padding(
+                padding: const EdgeInsets.only(right: 12.0),
+                child: Container(
+                  height: 30,
+                  width: 30,
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                          width: 2,
+                          color:
+                              _isdownloadedClicked ? Colors.red : Colors.white),
+                      shape: BoxShape.circle),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isdownloadedClicked = !_isdownloadedClicked;
+                      });
+                      isDownlaoded.value = _isdownloadedClicked;
+                    },
+                    child: Icon(
+                      Icons.arrow_downward,
+                      color: _isdownloadedClicked ? Colors.red : Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        body: Container(
-          decoration: new BoxDecoration(
-              gradient: new LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.green,
-              Colors.white,
             ],
+          ),
+          body: Container(
+            decoration: new BoxDecoration(
+                gradient: new LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.green,
+                Colors.white,
+              ],
+            )),
+            child: ValueListenableBuilder(
+                valueListenable: imgOrVideo,
+                builder: (BuildContext context, value, Widget child) {
+                  return Stack(alignment: Alignment.center, children: [
+                    Positioned.fill(
+                      child: _isGranted && _isPathValid
+                          ? value == 0
+                              ? StatusImage(dir: _dir)
+                              : StatusVideo(dir: _dir)
+                          : Container(
+                              color: Colors.white,
+                            ),
+                    ),
+                    Positioned(
+                      bottom: 5,
+                      child: BottomButton(),
+                    ),
+                  ]);
+                }),
           )),
-          child: ValueListenableBuilder(
-              valueListenable: imgOrVideo,
-              builder: (BuildContext context, value, Widget child) {
-                return Stack(alignment: Alignment.center, children: [
-                  Positioned.fill(
-                    child: _isGranted && _isPathValid
-                        ? value == 0
-                            ? StatusImage(dir: _dir)
-                            : StatusVideo(dir: _dir)
-                        : Container(
-                            color: Colors.white,
-                          ),
-                  ),
-                  Positioned(
-                    bottom: 5,
-                    child: BottomButton(),
-                  ),
-                ]);
-              }),
-        ));
+    );
   }
 }

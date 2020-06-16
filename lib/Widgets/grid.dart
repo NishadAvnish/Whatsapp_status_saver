@@ -40,7 +40,7 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
       width: _size.width,
       margin: EdgeInsets.all(2),
       child: GridView.builder(
-        cacheExtent :1.0,
+          cacheExtent: 1.0,
           itemCount: widget.list.length,
           gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
             childAspectRatio: 2 / 2.4,
@@ -57,12 +57,14 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
               },
               child: Card(
                 child: widget.flag == "image"
-                    ?  Image.file(
+                    ? Hero(
+                        tag: "image+${index.toString()}",
+                        child: Image.file(
                           File(widget.list[index]),
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.low,
-                        )
-                      
+                        ),
+                      )
                     : FutureBuilder(
                         future: _getImage(widget.list[index]),
                         builder: (context, snapshot) {
@@ -79,10 +81,9 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
                                 return Center(
                                     child: Text(snapshot.error.toString()));
                               } else {
-                                return  Image.file(
-                                    File(snapshot.data),
-                                    fit: BoxFit.cover,
-                                
+                                return Image.file(
+                                  File(snapshot.data),
+                                  fit: BoxFit.cover,
                                 );
                               }
 

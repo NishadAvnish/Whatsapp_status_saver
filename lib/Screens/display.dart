@@ -100,91 +100,95 @@ class _DisplayState extends State<Display> {
               _mediaQuery.padding.bottom -
               kToolbarHeight,
           child: Center(
-              child: PageView.builder(
-            controller: _pageController,
-            scrollDirection: Axis.horizontal,
-            itemCount: _list.length,
-            itemBuilder: (context, index) {
-              return Stack(alignment: Alignment.center, children: [
-                widget.flag == "image"
-                    ? Image.file(
-                        File(_list[_modifiedIndex]),
-                        fit: BoxFit.contain,
-                      )
-                    : VideoPlayerScreen(
-                        videoList: _list, index: _modifiedIndex),
-                _isStackOpen
-                    ? Positioned(
-                        bottom: 10,
-                        left: 20,
-                        right: 20,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: <Widget>[
-                            Container(
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Theme.of(context).accentColor),
-                              child: ValueListenableBuilder(
-                                  valueListenable: isDownlaoded,
-                                  builder: (context, isDownloadedValue, _) {
-                                    return isDownloadedValue
-                                        ? IconButton(
-                                            icon: Icon(Icons.delete),
-                                            onPressed: () {
-                                              Provider.of<ImageVideoProvider>(
-                                                      context,
-                                                      listen: false)
-                                                  .delete(
-                                                      _list[_modifiedIndex]);
-                                              setState(() {
-                                                if (_modifiedIndex ==
-                                                            _list.length - 1 &&
-                                                        _list.length == 1 ||
-                                                    _modifiedIndex == 0 &&
-                                                        _list.length == 1)
-                                                  Navigator.of(context).pop();
-                                                else if (_modifiedIndex ==
-                                                    _list.length - 1) {
-                                                  _modifiedIndex -= 1;
-                                                }
-                                              });
-                                            })
-                                        : IconButton(
-                                            icon: Icon(Icons.arrow_downward),
-                                            onPressed: () async {
-                                              await _saveFile(context);
-                                            },
-                                          );
-                                  }),
-                            ),
-                            MaterialButton(
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20.0)),
-                              color: Theme.of(context).accentColor,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 15.0, vertical: 5),
-                                child: Text(
-                                  "Share",
-                                  style: Theme.of(context).textTheme.body1,
-                                ),
+              child: Hero(
+            tag: "image+${_modifiedIndex.toString()}",
+            child: PageView.builder(
+              controller: _pageController,
+              scrollDirection: Axis.horizontal,
+              itemCount: _list.length,
+              itemBuilder: (context, index) {
+                return Stack(alignment: Alignment.center, children: [
+                  widget.flag == "image"
+                      ? Image.file(
+                          File(_list[_modifiedIndex]),
+                          fit: BoxFit.contain,
+                        )
+                      : VideoPlayerScreen(
+                          videoList: _list, index: _modifiedIndex),
+                  _isStackOpen
+                      ? Positioned(
+                          bottom: 10,
+                          left: 20,
+                          right: 20,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: <Widget>[
+                              Container(
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Theme.of(context).accentColor),
+                                child: ValueListenableBuilder(
+                                    valueListenable: isDownlaoded,
+                                    builder: (context, isDownloadedValue, _) {
+                                      return isDownloadedValue
+                                          ? IconButton(
+                                              icon: Icon(Icons.delete),
+                                              onPressed: () {
+                                                Provider.of<ImageVideoProvider>(
+                                                        context,
+                                                        listen: false)
+                                                    .delete(
+                                                        _list[_modifiedIndex]);
+                                                setState(() {
+                                                  if (_modifiedIndex ==
+                                                              _list.length -
+                                                                  1 &&
+                                                          _list.length == 1 ||
+                                                      _modifiedIndex == 0 &&
+                                                          _list.length == 1)
+                                                    Navigator.of(context).pop();
+                                                  else if (_modifiedIndex ==
+                                                      _list.length - 1) {
+                                                    _modifiedIndex -= 1;
+                                                  }
+                                                });
+                                              })
+                                          : IconButton(
+                                              icon: Icon(Icons.arrow_downward),
+                                              onPressed: () async {
+                                                await _saveFile(context);
+                                              },
+                                            );
+                                    }),
                               ),
-                              onPressed: () async {
-                                _shareContent(index);
-                              },
-                            ),
-                          ],
-                        ),
-                      )
-                    : Container(),
-              ]);
-            },
-            onPageChanged: (int newIndex) {
-              setState(() {
-                _modifiedIndex = newIndex;
-              });
-            },
+                              MaterialButton(
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20.0)),
+                                color: Theme.of(context).accentColor,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 15.0, vertical: 5),
+                                  child: Text(
+                                    "Share",
+                                    style: Theme.of(context).textTheme.body1,
+                                  ),
+                                ),
+                                onPressed: () async {
+                                  _shareContent(index);
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                      : Container(),
+                ]);
+              },
+              onPageChanged: (int newIndex) {
+                setState(() {
+                  _modifiedIndex = newIndex;
+                });
+              },
+            ),
           )),
         ),
       ),

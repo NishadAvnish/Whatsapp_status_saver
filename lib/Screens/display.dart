@@ -3,15 +3,18 @@ import 'dart:typed_data';
 import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:status_downloader/Listenable/notifier_value.dart';
+import 'package:status_downloader/Provider/image_video_provider.dart';
 import 'package:status_downloader/Utils/config.dart';
 import 'package:status_downloader/Widgets/modified_video_player.dart';
 import 'package:path/path.dart' as path;
 
 class Display extends StatefulWidget {
-  final List<String> list;
   final int index;
   final String flag;
-  Display({this.list, this.index, this.flag});
+  final bool isDownloadedClicked;
+  Display({this.index, this.flag, this.isDownloadedClicked});
 
   @override
   _DisplayState createState() => _DisplayState();
@@ -19,8 +22,9 @@ class Display extends StatefulWidget {
 
 class _DisplayState extends State<Display> {
   PageController _pageController;
-  bool _isStackOpen = true;
+  bool _isStackOpen = false;
   int _modifiedIndex;
+  List<String> _list = [];
 
   @override
   void initState() {
@@ -31,10 +35,10 @@ class _DisplayState extends State<Display> {
 
   Future<void> _shareContent(index) async {
     try {
-      final ByteData bytes = await rootBundle.load(widget.list[index]);
+      final ByteData bytes = await rootBundle.load(_list[index]);
       // this will return the file name
-      final _list = widget.list[index].split("/");
-      final _fileName = _list[_list.length - 1];
+      final _tempList = _list[_modifiedIndex].split("/");
+      final _fileName = _list[_tempList.length - 1];
       await Share.file(
           "Sending a file  using Flutter application",
           _fileName,
@@ -49,19 +53,18 @@ class _DisplayState extends State<Display> {
 
   Future<void> _saveFile(BuildContext context) async {
     /*'/storage/emulated/0/WhatsApp/Media/.Statuses/74fd861ea3354097987b53ebcfa63905.jpg' 
-    spliting and getting last element this result in "74fd861ea3354097987b53ebcfa63905.jpg"*/
+    spliting and getting last element result this "74fd861ea3354097987b53ebcfa63905.jpg"*/
 
-    final _nameList = widget.list[_modifiedIndex].split("/");
+    final _nameList = _list[_modifiedIndex].split("/");
     final _fileName = _nameList[_nameList.length - 1];
-    Directory _dir = Directory(
-        '/storage/emulated/0/statusdownloader/${widget.flag == "image" ? "images" : "videos"}');
+    Directory _dir = Directory('/storage/emulated/0/statusdownloader');
     if (!_dir.existsSync()) {
       _dir = await _dir.create(recursive: true);
     }
 
-    Uint8List _byteList = await File(widget.list[_modifiedIndex]).readAsBytes();
+    Uint8List _byteList = await File(_list[_modifiedIndex]).readAsBytes();
 
-    File(Directory(path.join(_dir.path, _fileName)).path)
+    await File(Directory(path.join(_dir.path, _fileName)).path)
         .writeAsBytes(_byteList);
     Scaffold.of(context).hideCurrentSnackBar();
     Scaffold.of(context).showSnackBar(SnackBar(
@@ -70,7 +73,7 @@ class _DisplayState extends State<Display> {
             borderRadius: BorderRadius.all(Radius.circular(12))),
         duration: Duration(milliseconds: 400),
         content: Text(
-          "File saved to statusdownloader/${widget.flag == "image" ? "Images" : "Videos"}",
+          "File saved to InternalStorage/statusdownloader}",
           textAlign: TextAlign.center,
         )));
   }
@@ -78,6 +81,7 @@ class _DisplayState extends State<Display> {
   @override
   Widget build(BuildContext context) {
     final _mediaQuery = MediaQuery.of(context);
+    _list = Provider.of<ImageVideoProvider>(context).getList;
     return Scaffold(
       appBar: AppBar(
         title: widget.flag == "image" ? Text("Image") : Text("Video"),
@@ -99,18 +103,16 @@ class _DisplayState extends State<Display> {
               child: PageView.builder(
             controller: _pageController,
             scrollDirection: Axis.horizontal,
-            itemCount: widget.list.length,
+            itemCount: _list.length,
             itemBuilder: (context, index) {
               return Stack(alignment: Alignment.center, children: [
                 widget.flag == "image"
-                    ? Hero(
-                        tag: "image+${widget.index.toString()}",
-                        child: Image.file(
-                          File(widget.list[index]),
-                          fit: BoxFit.contain,
-                        ),
+                    ? Image.file(
+                        File(_list[_modifiedIndex]),
+                        fit: BoxFit.contain,
                       )
-                    : VideoPlayerScreen(videoList: widget.list, index: index),
+                    : VideoPlayerScreen(
+                        videoList: _list, index: _modifiedIndex),
                 _isStackOpen
                     ? Positioned(
                         bottom: 10,
@@ -123,10 +125,37 @@ class _DisplayState extends State<Display> {
                               decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   color: Theme.of(context).accentColor),
-                              child: IconButton(
-                                  icon: Icon(Icons.arrow_downward),
-                                  onPressed: () async {
-                                    await _saveFile(context);
+                              child: ValueListenableBuilder(
+                                  valueListenable: isDownlaoded,
+                                  builder: (context, isDownloadedValue, _) {
+                                    return isDownloadedValue
+                                        ? IconButton(
+                                            icon: Icon(Icons.delete),
+                                            onPressed: () {
+                                              Provider.of<ImageVideoProvider>(
+                                                      context,
+                                                      listen: false)
+                                                  .delete(
+                                                      _list[_modifiedIndex]);
+                                              setState(() {
+                                                if (_modifiedIndex ==
+                                                            _list.length - 1 &&
+                                                        _list.length == 1 ||
+                                                    _modifiedIndex == 0 &&
+                                                        _list.length == 1)
+                                                  Navigator.of(context).pop();
+                                                else if (_modifiedIndex ==
+                                                    _list.length - 1) {
+                                                  _modifiedIndex -= 1;
+                                                }
+                                              });
+                                            })
+                                        : IconButton(
+                                            icon: Icon(Icons.arrow_downward),
+                                            onPressed: () async {
+                                              await _saveFile(context);
+                                            },
+                                          );
                                   }),
                             ),
                             MaterialButton(

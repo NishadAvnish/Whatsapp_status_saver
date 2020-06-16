@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:status_downloader/Listenable/imgOrVideo.dart';
+import 'package:status_downloader/Listenable/notifier_value.dart';
 import 'package:status_downloader/Utils/config.dart';
 
 class BottomButton extends StatelessWidget {

@@ -13,7 +13,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       final flag = _argument["flag"];
       return MaterialPageRoute(
           builder: (context) => Display(
-                list: image,
                 index: index,
                 flag: flag,
               ));

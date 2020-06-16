@@ -20,22 +20,7 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
   @override
   void initState() {
     super.initState();
-
-    //if (widget.flag == "video") _deletePresentThumbnail();
   }
-
-  // Future<void> _deletePresentThumbnail() async {
-  //   final _appDir = await getApplicationSupportDirectory();
-  //   _thumbPath = join(_appDir.path, "thumbnail");
-
-  //   //if _thumbPath is already present then this if condition doesnot create the directory
-  //   if (!Directory(_thumbPath).existsSync()) {
-  //     File(_thumbPath).createSync();
-  //   }
-
-  //   // to delete all the files lready present in thumbPath
-  //   Directory(_thumbPath).deleteSync(recursive: true);
-  // }
 
   _getImage(videoPathUrl) async {
     String thumb = await Thumbnails.getThumbnail(
@@ -72,14 +57,12 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
               },
               child: Card(
                 child: widget.flag == "image"
-                    ? Hero(
-                        tag: "image+${index.toString()}",
-                        child: Image.file(
+                    ?  Image.file(
                           File(widget.list[index]),
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.low,
-                        ),
-                      )
+                        )
+                      
                     : FutureBuilder(
                         future: _getImage(widget.list[index]),
                         builder: (context, snapshot) {

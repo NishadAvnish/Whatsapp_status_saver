@@ -22,7 +22,6 @@ class Display extends StatefulWidget {
 
 class _DisplayState extends State<Display> {
   PageController _pageController;
-  bool _isStackOpen = false;
   int _modifiedIndex;
   List<String> _list = [];
 
@@ -33,12 +32,21 @@ class _DisplayState extends State<Display> {
     _modifiedIndex = widget.index;
   }
 
+  @override
+  void dispose() {
+    _pageController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _shareContent(index) async {
     try {
       final ByteData bytes = await rootBundle.load(_list[index]);
       // this will return the file name
-      final _tempList = _list[_modifiedIndex].split("/");
-      final _fileName = _list[_tempList.length - 1];
+      final _tempList = _list[index].split("/");
+      _tempList.forEach((element) {
+        print(element);
+      });
+      final _fileName = _tempList[_tempList.length - 1];
       await Share.file(
           "Sending a file  using Flutter application",
           _fileName,
@@ -81,117 +89,82 @@ class _DisplayState extends State<Display> {
   @override
   Widget build(BuildContext context) {
     final _mediaQuery = MediaQuery.of(context);
-    _list = Provider.of<ImageVideoProvider>(context).getList;
+    _list = Provider.of<ImageVideoProvider>(context, listen: true).getList;
+
     return Scaffold(
-      appBar: AppBar(
-        title: widget.flag == "image" ? Text("Image") : Text("Video"),
-      ),
-      backgroundColor: darkBackground,
-      body: GestureDetector(
-        onTap: () {
-          setState(() {
-            _isStackOpen = !_isStackOpen;
-          });
-        },
-        child: Container(
-          width: _mediaQuery.size.width,
-          height: _mediaQuery.size.height -
-              _mediaQuery.padding.top -
-              _mediaQuery.padding.bottom -
-              kToolbarHeight,
-          child: Center(
-              child: Hero(
-            tag: "image+${_modifiedIndex.toString()}",
-            child: PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.horizontal,
-              itemCount: _list.length,
-              itemBuilder: (context, index) {
-                return Stack(alignment: Alignment.center, children: [
-                  widget.flag == "image"
-                      ? Image.file(
-                          File(_list[_modifiedIndex]),
-                          fit: BoxFit.contain,
-                        )
-                      : VideoPlayerScreen(
-                          videoList: _list, index: _modifiedIndex),
-                  _isStackOpen
-                      ? Positioned(
-                          bottom: 10,
-                          left: 20,
-                          right: 20,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: <Widget>[
-                              Container(
-                                decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(context).accentColor),
-                                child: ValueListenableBuilder(
-                                    valueListenable: isDownlaoded,
-                                    builder: (context, isDownloadedValue, _) {
-                                      return isDownloadedValue
-                                          ? IconButton(
-                                              icon: Icon(Icons.delete),
-                                              onPressed: () {
-                                                Provider.of<ImageVideoProvider>(
-                                                        context,
-                                                        listen: false)
-                                                    .delete(
-                                                        _list[_modifiedIndex]);
-                                                setState(() {
-                                                  if (_modifiedIndex ==
-                                                              _list.length -
-                                                                  1 &&
-                                                          _list.length == 1 ||
-                                                      _modifiedIndex == 0 &&
-                                                          _list.length == 1)
-                                                    Navigator.of(context).pop();
-                                                  else if (_modifiedIndex ==
-                                                      _list.length - 1) {
-                                                    _modifiedIndex -= 1;
-                                                  }
-                                                });
-                                              })
-                                          : IconButton(
-                                              icon: Icon(Icons.arrow_downward),
-                                              onPressed: () async {
-                                                await _saveFile(context);
-                                              },
-                                            );
-                                    }),
-                              ),
-                              MaterialButton(
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20.0)),
-                                color: Theme.of(context).accentColor,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 15.0, vertical: 5),
-                                  child: Text(
-                                    "Share",
-                                    style: Theme.of(context).textTheme.body1,
-                                  ),
-                                ),
-                                onPressed: () async {
-                                  _shareContent(index);
-                                },
-                              ),
-                            ],
-                          ),
-                        )
-                      : Container(),
-                ]);
-              },
-              onPageChanged: (int newIndex) {
-                setState(() {
-                  _modifiedIndex = newIndex;
-                });
-              },
+        appBar: AppBar(
+          title: widget.flag == "image" ? Text("Image") : Text("Video"),
+          actions: <Widget>[
+            _deleteOrSave(),
+            IconButton(
+              onPressed: () => _shareContent(_modifiedIndex),
+              icon: Icon(Icons.share),
             ),
-          )),
+          ],
         ),
-      ),
-    );
+        backgroundColor: darkBackground,
+        body: Stack(
+          children: <Widget>[
+            Container(
+                width: _mediaQuery.size.width,
+                height: _mediaQuery.size.height -
+                    _mediaQuery.padding.top -
+                    _mediaQuery.padding.bottom -
+                    kToolbarHeight,
+                child: Center(
+                    child: Hero(
+                  tag: "image+${_modifiedIndex.toString()}",
+                  child: PageView.builder(
+                    controller: _pageController,
+                    onPageChanged: (int page) {
+                      setState(() {
+                        _modifiedIndex = page;
+                      });
+                    },
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _list.length,
+                    itemBuilder: (context, index) {
+                      return widget.flag == "image"
+                          ? Image.file(
+                              File(_list[index]),
+                              fit: BoxFit.contain,
+                            )
+                          : VideoPlayerScreen(
+                              videoFile: _list[index],
+                            );
+                    },
+                  ),
+                ))),
+            Align(
+                alignment: Alignment.centerRight,
+                child: Text(_modifiedIndex.toString()))
+          ],
+        ));
+  }
+
+  Widget _deleteOrSave() {
+    return ValueListenableBuilder(
+        valueListenable: isDownlaoded,
+        builder: (context, isDownloadedValue, _) {
+          return isDownloadedValue
+              ? IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () {
+                    Provider.of<ImageVideoProvider>(context, listen: false)
+                        .delete(_list[_modifiedIndex]);
+
+                    if (_list.length == 1) {
+                      Navigator.of(context).pop();
+                    } else if (_modifiedIndex == _list.length - 1) {
+                      _modifiedIndex -= 1;
+                    }
+                  })
+              : IconButton(
+                  icon: Icon(Icons.arrow_downward),
+                  onPressed: () async {
+                    await _saveFile(context);
+                  },
+                );
+        });
   }
 }

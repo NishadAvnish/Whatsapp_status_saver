@@ -28,7 +28,7 @@ class _GridState extends State<Grid> with AutomaticKeepAliveClientMixin {
         videoFile: videoPathUrl,
         imageType:
             ThumbFormat.PNG, //this image will store in created folderpath
-        quality: 10);
+        quality: 5);
     return thumb;
   }
 

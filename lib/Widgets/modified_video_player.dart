@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
-  final List<String> videoList;
-  final int index;
-  VideoPlayerScreen({Key key, this.videoList, this.index}) : super(key: key);
+  final String videoFile;
+  VideoPlayerScreen({
+    Key key,
+    this.videoFile,
+  }) : super(key: key);
 
   @override
   _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
@@ -24,8 +26,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void initState() {
     super.initState();
 
-    _controller =
-        VideoPlayerController.file(File(widget.videoList[widget.index]));
+    _controller = VideoPlayerController.file(File(widget.videoFile));
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setVolume(1);
     _controller.setLooping(true);
@@ -45,11 +46,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _controller.dispose();
+    super.dispose();
   }
-
- 
 
   @override
   Widget build(BuildContext context) {

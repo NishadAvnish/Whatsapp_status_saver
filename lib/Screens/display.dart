@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:esys_flutter_share/esys_flutter_share.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:share_extend/share_extend.dart';
 import 'package:status_downloader/Listenable/notifier_value.dart';
 import 'package:status_downloader/Provider/image_video_provider.dart';
 import 'package:status_downloader/Utils/config.dart';
@@ -40,20 +40,23 @@ class _DisplayState extends State<Display> {
 
   Future<void> _shareContent(index) async {
     try {
-      final ByteData bytes = await rootBundle.load(_list[index]);
-      // this will return the file name
-      final _tempList = _list[index].split("/");
-      _tempList.forEach((element) {
-        print(element);
-      });
-      final _fileName = _tempList[_tempList.length - 1];
-      await Share.file(
-          "Sending a file  using Flutter application",
-          _fileName,
-          bytes.buffer.asUint8List(),
-          "${widget.flag == "image" ? "image/*" : "video/*"}",
-          text:
-              "Sending using my whatsapp status downloader.Go download it....");
+      // final ByteData bytes = await rootBundle.load(_list[index]);
+      // // this will return the file name
+      // final _tempList = _list[index].split("/");
+      // _tempList.forEach((element) {
+      //   print(element);
+      // });
+      // final _fileName = _tempList[_tempList.length - 1];
+      // await Share.file(
+      //     "Sending a file  using Flutter application",
+      //     _fileName,
+      //     bytes.buffer.asUint8List(),
+      //     "${widget.flag == "image" ? "image/*" : "video/*"}",
+      //     text:
+      //         "Sending using my whatsapp status downloader.Go download it....");
+
+      ShareExtend.share(
+          _list[index], widget.flag == "image" ? "image" : "video");
     } catch (e) {
       print(e);
     }
@@ -81,7 +84,7 @@ class _DisplayState extends State<Display> {
             borderRadius: BorderRadius.all(Radius.circular(12))),
         duration: Duration(milliseconds: 400),
         content: Text(
-          "File saved to InternalStorage/statusdownloader}",
+          "File saved to internalStorage/statusdownloader}",
           textAlign: TextAlign.center,
         )));
   }
@@ -92,54 +95,49 @@ class _DisplayState extends State<Display> {
     _list = Provider.of<ImageVideoProvider>(context, listen: true).getList;
 
     return Scaffold(
-        appBar: AppBar(
-          title: widget.flag == "image" ? Text("Image") : Text("Video"),
-          actions: <Widget>[
-            _deleteOrSave(),
-            IconButton(
-              onPressed: () => _shareContent(_modifiedIndex),
-              icon: Icon(Icons.share),
+      appBar: AppBar(
+        title: widget.flag == "image" ? Text("Image") : Text("Video"),
+        actions: <Widget>[
+          _deleteOrSave(),
+          IconButton(
+            onPressed: () => _shareContent(_modifiedIndex),
+            icon: Icon(Icons.share),
+          ),
+        ],
+      ),
+      backgroundColor: darkBackground,
+      body: Container(
+          width: _mediaQuery.size.width,
+          height: _mediaQuery.size.height -
+              _mediaQuery.padding.top -
+              _mediaQuery.padding.bottom -
+              kToolbarHeight,
+          child: Center(
+              child: Hero(
+            tag: "image+${_modifiedIndex.toString()}",
+            child: PageView.builder(
+              controller: _pageController,
+              key: Key(_list.length.toString()),
+              onPageChanged: (int page) {
+                setState(() {
+                  _modifiedIndex = page;
+                });
+              },
+              scrollDirection: Axis.horizontal,
+              itemCount: _list.length,
+              itemBuilder: (context, index) {
+                return widget.flag == "image"
+                    ? Image.file(
+                        File(_list[index]),
+                        fit: BoxFit.contain,
+                      )
+                    : VideoViewer(
+                        videoFilePath: _list[index],
+                      );
+              },
             ),
-          ],
-        ),
-        backgroundColor: darkBackground,
-        body: Stack(
-          children: <Widget>[
-            Container(
-                width: _mediaQuery.size.width,
-                height: _mediaQuery.size.height -
-                    _mediaQuery.padding.top -
-                    _mediaQuery.padding.bottom -
-                    kToolbarHeight,
-                child: Center(
-                    child: Hero(
-                  tag: "image+${_modifiedIndex.toString()}",
-                  child: PageView.builder(
-                    controller: _pageController,
-                    onPageChanged: (int page) {
-                      setState(() {
-                        _modifiedIndex = page;
-                      });
-                    },
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _list.length,
-                    itemBuilder: (context, index) {
-                      return widget.flag == "image"
-                          ? Image.file(
-                              File(_list[index]),
-                              fit: BoxFit.contain,
-                            )
-                          : VideoPlayerScreen(
-                              videoFile: _list[index],
-                            );
-                    },
-                  ),
-                ))),
-            Align(
-                alignment: Alignment.centerRight,
-                child: Text(_modifiedIndex.toString()))
-          ],
-        ));
+          ))),
+    );
   }
 
   Widget _deleteOrSave() {

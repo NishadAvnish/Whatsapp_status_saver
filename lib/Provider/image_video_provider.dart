@@ -33,11 +33,11 @@ class ImageVideoProvider with ChangeNotifier {
     } catch (e) {
       print(e);
     }
-    final temp= _list.toList();
+    final temp = _list.toList();
 
     final _index = _list.indexOf(filePath);
     temp.removeAt(_index);
-    _list=temp.toList();
+    _list = temp.toList();
     notifyListeners();
   }
 }

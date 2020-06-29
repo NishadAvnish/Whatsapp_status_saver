@@ -1,36 +1,32 @@
-import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'dart:io';
 
-class VideoPlayerScreen extends StatefulWidget {
-  final String videoFile;
-  VideoPlayerScreen({
-    Key key,
-    this.videoFile,
-  }) : super(key: key);
+class VideoViewer extends StatefulWidget {
+  final String videoFilePath;
+  VideoViewer({this.videoFilePath});
 
   @override
-  _VideoPlayerScreenState createState() => _VideoPlayerScreenState();
+  _VideoViewerState createState() => _VideoViewerState();
 }
 
-class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
+class _VideoViewerState extends State<VideoViewer> {
   VideoPlayerController _controller;
   VoidCallback listener;
   Future<void> _initializeVideoPlayerFuture;
-  bool isPlaying = false;
-  bool _isStackOpen = true;
   double _value = 0.0;
-
+  bool _showbutton = true;
   @override
   void initState() {
     super.initState();
 
-    _controller = VideoPlayerController.file(File(widget.videoFile));
+    // Create an store the VideoPlayerController. The VideoPlayerController
+    // offers several different constructors to play videos from assets, files,
+    // or the internet.
+    _controller = VideoPlayerController.file(File(widget.videoFilePath));
+
     _initializeVideoPlayerFuture = _controller.initialize();
     _controller.setVolume(1);
-    _controller.setLooping(true);
-
     _controller.addListener(() {
       if (mounted)
         setState(
@@ -40,138 +36,130 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           },
         );
     });
-
     _controller.play();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    // Ensure disposing of the VideoPlayerController to free up resources.
+    _controller?.dispose();
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-        height: MediaQuery.of(context).size.height * 0.5,
-        child: _getMediaPlayer());
-  }
-
-  Widget _getMediaPlayer() {
     return FutureBuilder(
       future: _initializeVideoPlayerFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
-          return _previewVideo(_controller);
+          // If the VideoPlayerController has finished initialization, use
+          // the data it provides to limit the aspect ratio of the VideoPlayer.
+          return Stack(
+            alignment: Alignment.center,
+            children: <Widget>[
+              InkWell(
+                child: AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
+                onTap: () {
+                  setState(() {
+                    _showbutton = !_showbutton;
+                  });
+                },
+              ),
+              _showbutton
+                  ? Container()
+                  : Stack(
+                      alignment: Alignment.bottomCenter,
+                      // mainAxisAlignment: MainAxisAlignment.center,
+                      // crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: <Widget>[
+                        AnimatedOpacity(
+                          duration: Duration(milliseconds: 800),
+                          opacity: !_showbutton && _controller.value.isPlaying
+                              ? 0
+                              : 1,
+                          curve: Curves.easeInOut,
+                          child: Container(
+                            width: 110,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.black26,
+                            ),
+                            //height: _controller.value.size.height,
+
+                            child: Center(
+                              child: IconButton(
+                                iconSize: 80,
+                                icon: _controller.value.isPlaying
+                                    ? Icon(Icons.pause)
+                                    : Icon(Icons.play_arrow),
+                                onPressed: () {
+                                  !_controller.value.isPlaying
+                                      ? _controller.play()
+                                      : _controller.pause();
+                                },
+                                //  child: Icons.play_arrow,
+                                color: Colors.white,
+                                //  size: 100.0,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: AnimatedOpacity(
+                            duration: Duration(milliseconds: 1000),
+                            opacity: _showbutton ? 0 : 1,
+                            curve: Curves.easeInOut,
+                            child: Row(
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    "${_controller.value.position.inMinutes.remainder(60).toString().padLeft(2, "0")} : ${_controller.value.position.inSeconds.remainder(60).toString().padLeft(2, "0")} ",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 20),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Container(
+                                    height: 100,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: videoSeeker(),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+            ],
+          );
         } else {
+          // If the VideoPlayerController is still initializing, show a
+          // loading spinner.
           return Center(child: CircularProgressIndicator());
         }
       },
     );
   }
 
-  Widget _previewVideo(VideoPlayerController controller) {
-    if (controller == null) {
-      isPlaying = false;
-      return const Text('Please Select or Record a Video.');
-    } else if (controller.value.initialized) {
-      return Stack(
-        children: <Widget>[
-          Positioned.fill(
-            child: InkWell(
-              child: AspectRatio(
-                aspectRatio: controller.value.aspectRatio,
-                child: VideoPlayer(
-                  controller,
-                ),
-              ),
-              onTap: () {
-                setState(() {
-                  _isStackOpen = !_isStackOpen;
-                });
-              },
-            ),
-          ),
-          _isStackOpen
-              ? Container()
-              : GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isStackOpen = !_isStackOpen;
-                    });
-                  },
-                  child: Container(
-                    height: controller.value.size.height,
-                    color: Colors.transparent,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: MediaQuery.of(context).padding.top),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Container(
-                                    decoration: BoxDecoration(
-                                        color: Colors.black54,
-                                        shape: BoxShape.circle),
-                                    child: IconButton(
-                                      icon: Icon(
-                                        _controller.value.isPlaying
-                                            ? Icons.pause
-                                            : Icons.play_arrow,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () {
-                                        setState(() {
-                                          if (_controller.value.isPlaying) {
-                                            controller.pause();
-                                          } else {
-                                            controller.play();
-                                          }
-                                        });
-                                      },
-                                    )),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: Slider(
-                                onChanged: (double changedValue) {
-                                  setState(() {
-                                    _value = changedValue;
-                                    _controller.seekTo(Duration(
-                                        seconds: changedValue.floor()));
-                                  });
-                                },
-                                onChangeStart: (changedValue) {
-                                  setState(() {
-                                    _value = changedValue;
-                                  });
-                                },
-                                value: _value,
-                                min: 0.0,
-                                max: controller.value.duration.inSeconds
-                                    .toDouble(),
-                                label: _value.toString(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-        ],
-      );
-    } else {
-      isPlaying = false;
-      return const Text('Error Loading Video');
-    }
+  Slider videoSeeker() {
+    return Slider(
+        value: _value,
+        min: 0.0,
+        max: _controller.value.duration.inSeconds.toDouble(),
+        onChanged: (double _changeValue) {
+          setState(() {
+            _value = _changeValue;
+            _controller.seekTo(Duration(seconds: _changeValue.floor()));
+          });
+        });
   }
 }

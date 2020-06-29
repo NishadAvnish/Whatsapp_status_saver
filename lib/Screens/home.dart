@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:open_appstore/open_appstore.dart';
 import 'package:status_downloader/Listenable/notifier_value.dart';
 import 'package:status_downloader/Screens/image_status.dart';
 import 'package:status_downloader/Widgets/bottomButton.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:store_launcher/store_launcher.dart';
 import 'video_status.dart';
 
 class Home extends StatefulWidget {
@@ -54,9 +54,22 @@ class _HomeState extends State<Home> {
               ),
               launch != null
                   ? FlatButton(
-                      onPressed: () => OpenAppstore.launch(
-                          androidAppId: "com.whatsapp&hl=en",
-                          iOSAppId: "310633997"),
+                      // onPressed: () => OpenAppstore.launch(
+                      //     androidAppId: "com.whatsapp&hl=en",
+                      //     iOSAppId: "310633997"),
+                      onPressed: () {
+                        final appId = Platform.isAndroid
+                            ? "com.whatsapp&hl=en"
+                            : "310633997";
+
+                        try {
+                          StoreLauncher.openWithStore(appId).catchError((e) {
+                            print('ERROR> $e');
+                          });
+                        } on Exception catch (e) {
+                          print('$e');
+                        }
+                      },
                       child: Text(actionButton[1],
                           style: Theme.of(context).textTheme.bodyText1))
                   : Container(),
@@ -116,8 +129,6 @@ class _HomeState extends State<Home> {
   }
 
   Future<bool> _onBackPressed() async {
-    
-
     return showDialog(
       context: context,
       builder: (context) => new AlertDialog(
